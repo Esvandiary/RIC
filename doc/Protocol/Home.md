@@ -54,7 +54,7 @@ Request data:
 * `username` (string, required): the username to log in with
 * `password` (Password, required): the password to log in with
 * `client_token` (string, optional): a client token identifying the client as previously logged in
-* `2fa_token` (string, optional): a current 2FA token for the account
+* `mfa_token` (string, optional): a current multi-factor authentication token for the account
 * `join_token` (string, optional): a join token to connect to this server
 
 Possible response status values are: `success`, `2fa_required`, `disallowed_client`, `disallowed_user`, `unrecognised_user`, `invalid_2fa_token`, `invalid_join_token`
@@ -64,7 +64,7 @@ Response data for successful requests:
 * `server_app` (ServerAppInfo, required): information about the server software
 * `server_identity` (ServerIdentity, required): information about the server's identity
 * `user` (UserIdentity, required): information about the user now logged in
-* `client_token` (string, required): a token 
+* `client_token` (string, optional): a token to recognise previously-used clients
 
 Response data for failed requests:
 
