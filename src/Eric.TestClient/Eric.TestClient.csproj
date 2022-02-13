@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Eric.ClientCommon\Eric.ClientCommon.csproj" />
+    <ProjectReference Include="..\Eric.Common\Eric.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>TinyCart.Eric.TestClient</RootNamespace>
+  </PropertyGroup>
+
+</Project>
