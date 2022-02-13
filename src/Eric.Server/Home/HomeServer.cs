@@ -63,29 +63,30 @@ public class HomeServer : IServerWSEndpoint
     public HomeServerUser RegisterUser(string username, Password password, string? joinToken)
     {
         if (RegistrationPolicy == JoinPolicy.Disabled)
-            throw new Exception("cannot register new user: registrations disabled");
+            throw new JoinPolicyException("attempted to register with registrations disabled");
 
         lock (m_registerLock)
         {
             if (RegistrationPolicy == JoinPolicy.JoinTokenOnly)
             {
                 if (joinToken == null)
-                    throw new Exception("cannot register new user: registration with join token only and no token provided");
+                    throw new JoinPolicyException("attempted to register with join token required and no token provided");
                 if (!m_registerTokens.Contains(joinToken!))
-                    throw new Exception("cannot register new user: registration with join token only and unrecognised token provided");
+                    throw new JoinPolicyException("attempted to register with join token required and unrecognised token provided");
             }
 
             if (m_users.ContainsKey(username))
-                throw new Exception("cannot register new user: username in use");
+                throw new CredentialsException(CredentialsException.Credential.Username, "username in use");
             
             if (password.Format != "plaintext")
-                throw new Exception("cannot register new user: password must be in plaintext");
+                throw new CredentialsException(CredentialsException.Credential.Password, "password must be in plaintext");
 
             var user = HomeServerUser.CreateNew(username, password.Data);
             m_users[username] = user;
 
             if (RegistrationPolicy == JoinPolicy.JoinTokenOnly)
             {
+                // TODO: better system
                 m_registerTokens.Remove(joinToken!);
             }
 
@@ -96,17 +97,17 @@ public class HomeServer : IServerWSEndpoint
     public HomeServerUser LoginUser(string username, Password password, string? clientToken, string? mfaToken, string? joinToken)
     {
         if (LoginPolicy == JoinPolicy.Disabled)
-            throw new Exception("cannot log in user: logins disabled");
+            throw new JoinPolicyException("attempted to log in with logins disabled");
 
         if (password.Format != "plaintext")
-            throw new Exception("cannot log in user: password must be in plaintext");
+            throw new CredentialsException(CredentialsException.Credential.Password, "password must be in plaintext");
 
         if (!m_users.TryGetValue(username, out var user))
-            throw new Exception("cannot log in user: unknown username");
-        
+            throw new CredentialsException(CredentialsException.Credential.Username, "unknown username");
+
         if (!user.Password.Check(password.Data))
-            throw new Exception("cannot log in user: incorrect password");
-        
+            throw new CredentialsException(CredentialsException.Credential.Password, "incorrect password");
+
         // TODO: MFA
 
         lock (m_loginLock)
@@ -114,9 +115,15 @@ public class HomeServer : IServerWSEndpoint
             if (LoginPolicy == JoinPolicy.JoinTokenOnly)
             {
                 if (joinToken == null)
-                    throw new Exception("cannot log in user: login with join token only and no token provided");
+                    throw new JoinPolicyException("attempted login with join token required and no token provided");
                 if (!m_loginTokens.Contains(joinToken!))
-                    throw new Exception("cannot log in user: login with join token only and unrecognised token provided");
+                    throw new JoinPolicyException("attempted login with join token required and unrecognised token provided");
+
+                if (LoginPolicy == JoinPolicy.JoinTokenOnly)
+                {
+                    // TODO: better system
+                    m_loginTokens.Remove(joinToken!);
+                }
             }
 
             return user;

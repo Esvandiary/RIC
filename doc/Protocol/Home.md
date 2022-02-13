@@ -32,7 +32,7 @@ Request data:
 * `password` (Password, required): the password to register with
 * `join_token` (string, optional): a join token to register on this server
 
-Possible response status values are: `success`, `registration_closed`, `invalid_username`, `username_in_use`, `invalid_password`, `invalid_password_format`, `invalid_join_token`
+Possible response status values are: `success`, `registration_closed`, `invalid_username`, `username_in_use`, `invalid_password`, `invalid_password_format`, `invalid_join_token`, `join_token_required`
 
 Response data is empty for successful requests.
 
@@ -57,7 +57,7 @@ Request data:
 * `mfa_token` (string, optional): a current multi-factor authentication token for the account
 * `join_token` (string, optional): a join token to connect to this server
 
-Possible response status values are: `success`, `2fa_required`, `disallowed_client`, `disallowed_user`, `unrecognised_user`, `invalid_2fa_token`, `invalid_join_token`
+Possible response status values are: `success`, `login_closed`, `mfa_required`, `disallowed_client`, `disallowed_user`, `unrecognised_user`, `invalid_password`, `invalid_mfa_token`, `invalid_join_token`, `join_token_required`
 
 Response data for successful requests:
 

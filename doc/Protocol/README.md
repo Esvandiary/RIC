@@ -43,6 +43,7 @@ If the message type is `reply`, the following key MUST also be present in the ro
   * The possible values are message-specific, but the following values are standard:
     * A successful request MUST result in a status value of `success`
     * An invalid message (i.e. not conforming to the schema) MUST result in a status value of `invalid_message`
+    * An unexpected error which cannot be categorised MUST result in a status value of `unknown_error`
   * If the value is not `success`, then the `data` property is likely to contain different data; this is detailed in individual messages
 
 

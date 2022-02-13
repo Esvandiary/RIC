@@ -37,7 +37,7 @@ public class HomeServerClient
         catch (Exception)
         {
             // TODO: better exceptions
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_challenge", Data = new JObject() });
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
@@ -55,10 +55,25 @@ public class HomeServerClient
             // bug?
             return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
+        catch (CredentialsException ex)
+        {
+            string status = ex.InvalidCredentialType switch
+            {
+                CredentialsException.Credential.Username => "invalid_username",
+                CredentialsException.Credential.Password => "invalid_password",
+                _ => "unknown_error"
+            };
+            // TODO: write info struct
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+        }
+        catch (JoinPolicyException)
+        {
+            string status = !String.IsNullOrEmpty(data.Value<string>("join_token")) ? "invalid_join_token" : "join_token_required";
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+        }
         catch (Exception)
         {
-            // TODO: better exceptions
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_password", Data = new JObject() });
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
@@ -87,10 +102,27 @@ public class HomeServerClient
             // bug?
             return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
+        catch (CredentialsException ex)
+        {
+            string status = ex.InvalidCredentialType switch
+            {
+                CredentialsException.Credential.Username => "invalid_username",
+                CredentialsException.Credential.Password => "invalid_password",
+                CredentialsException.Credential.MFAToken
+                    => !String.IsNullOrEmpty(data.Value<string>("mfa_token")) ? "invalid_mfa_token" : "mfa_token_required",
+                _ => "unknown_error"
+            };
+            // TODO: write info struct
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+        }
+        catch (JoinPolicyException)
+        {
+            string status = !String.IsNullOrEmpty(data.Value<string>("join_token")) ? "invalid_join_token" : "join_token_required";
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+        }
         catch (Exception)
         {
-            // TODO: better exceptions
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_password", Data = new JObject() });
+            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
