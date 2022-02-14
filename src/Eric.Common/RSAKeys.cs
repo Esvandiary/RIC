@@ -34,5 +34,8 @@ public static class RSAConstants
     public static RSAEncryptionPadding EncryptionPadding { get; } = RSAEncryptionPadding.OaepSHA256;
     public static RSASignaturePadding SignaturePadding { get; } = RSASignaturePadding.Pkcs1;
 
-    public static string FormatName { get => $"rsa-{HashAlgorithm.Name!.ToLower()}-{EncryptionPadding.ToString().ToLower()}-{SignaturePadding.ToString().ToLower()}"; }
+    public static string FormatName
+    {
+        get => $"rsa-{HashAlgorithm.Name!.ToLower()}-{EncryptionPadding.ToString().ToLower()}-{SignaturePadding.ToString().ToLower()}";
+    }
 }

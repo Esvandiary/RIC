@@ -11,6 +11,8 @@ and servers SHOULD immediately close the connection if they receive one.
 
 This message gets the server's public key and verifies its identity. This request does not require the user to be authenticated.
 
+If the client cannot verify that the challenge was signed by the private key matching the server's public key, it MUST immediately close the connection.
+
 Request data:
 
 * `challenge` (string, required): the base64-encoded string to verify with
@@ -57,7 +59,7 @@ Request data:
 * `mfa_token` (string, optional): a current multi-factor authentication token for the account
 * `join_token` (string, optional): a join token to connect to this server
 
-Possible response status values are: `success`, `login_closed`, `mfa_required`, `disallowed_client`, `disallowed_user`, `unrecognised_user`, `invalid_password`, `invalid_mfa_token`, `invalid_join_token`, `join_token_required`
+Possible response status values are: `success`, `already_logged_in`, `login_closed`, `mfa_required`, `disallowed_client`, `disallowed_user`, `unrecognised_user`, `invalid_password`, `invalid_mfa_token`, `invalid_join_token`, `join_token_required`
 
 Response data for successful requests:
 
@@ -75,6 +77,18 @@ Response data for failed requests:
 
 
 
+### `logout` (request, reply)
+
+This message logs out the user currently associated with this connection.
+
+Request data is empty.
+
+Possible response status values are: `success`, `not_logged_in`
+
+Response data is empty.
+
+
+
 ### `decrypt` (request, reply)
 
 This message allows the current user to decrypt one or more messages with their private key as held by the home server.
@@ -83,7 +97,7 @@ Request data:
 
 * `encrypted_messages` (array[string], required): an array of base64-encoded messages to be decrypted
 
-Possible response status values are: `success`, `invalid_messages`
+Possible response status values are: `success`, `not_logged_in`, `invalid_messages`
 
 Response data for successful requests:
 
@@ -105,7 +119,7 @@ Request data:
 * `messages` (array[string], required): an array of base64-encoded messages to be hashed and signed
 * `hash` (string, required): the hash to use
 
-Possible response status values are: `success`, `invalid_messages`, `invalid_hash`
+Possible response status values are: `success`, `not_logged_in`, `invalid_messages`, `invalid_hash`
 
 Response data for successful requests:
 
