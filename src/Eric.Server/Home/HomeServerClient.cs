@@ -163,9 +163,9 @@ public class HomeServerClient
             var decryptedMessages = new List<string>(rdata.EncryptedMessages.Count);
             foreach (var msg in rdata.EncryptedMessages)
             {
-                var decoded = Convert.FromBase64String(msg);
                 try
                 {
+                    var decoded = Convert.FromBase64String(msg);
                     var decrypted = m_user!.Keys.Decrypt(decoded);
                     decryptedMessages.Add(Convert.ToBase64String(decrypted));
                 }
@@ -213,9 +213,9 @@ public class HomeServerClient
             var signedHashes = new List<string>(rdata.Messages.Count);
             foreach (var msg in rdata.Messages)
             {
-                var decoded = Convert.FromBase64String(msg);
                 try
                 {
+                    var decoded = Convert.FromBase64String(msg);
                     var signed = m_user!.Keys.Sign(decoded);
                     signedHashes.Add(Convert.ToBase64String(signed));
                 }
