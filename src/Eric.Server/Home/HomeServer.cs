@@ -22,6 +22,7 @@ public class HomeServer : IServerWSEndpoint
         Services = cs;
         m_logger = Services.Logging.GetLogger<HomeServer>();
 
+        // TODO: persist keys and identity
         Keys = new RSAKeys(RSA.Create());
         Identity = new ServerIdentity()
         {

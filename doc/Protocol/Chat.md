@@ -17,6 +17,8 @@ Request data:
 
 * `challenge` (string, required): the base64-encoded string to verify with
 
+Possible response status values are: `success`, `invalid_challenge`
+
 Response data:
 
 * `pubkey` (PublicKey, required): the server's public key
@@ -36,7 +38,7 @@ This message allows the server to verify the client's identity and negotiate the
 * `join_token` (string, optional): a join token to connect to this server
 
 
-Possible `connect` response status values are: `success`, `invalid_challenge`, `invalid_user`, `disallowed_client`, `disallowed_user`, `unrecognised_user`, `invalid_join_token`
+Possible response status values are: `success`, `already_connected`, `invalid_challenge`, `unrecognised_user`, `disallowed_client`, `disallowed_user`, `invalid_join_token`, `join_token_required`
 
 Response data for successful `connect` requests:
 
@@ -50,3 +52,17 @@ Response data for failed `connect` requests:
   * Note that this value is optional even when the failure reason is a disallowed client
 * `disallowed_user_reason` (string, optional): the reason a user is disallowed by the server
   * Note that this value is optional even when the failure reason is a disallowed user
+
+
+
+### `disconnect` (request, reply)
+
+This message disconnects the current user from the chat server.
+
+`disconnect` request data:
+
+* `reason` (string, optional): the reason the user is disconnecting
+
+Possible response status values are: `success`, `not_connected`
+
+Response data is empty.

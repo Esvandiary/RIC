@@ -2,8 +2,7 @@
 
 All messages on this path require the user to have authenticated, unless otherwise specified.
 
-Until authentication is completed (via a successful `login` request), all messages requiring authentication MUST be ignored
-and servers SHOULD immediately close the connection if they receive one.
+Until authentication is completed (via a successful `login` request), all messages requiring authentication MUST be ignored and servers SHOULD immediately close the connection if they receive one.
 
 
 
@@ -16,6 +15,8 @@ If the client cannot verify that the challenge was signed by the private key mat
 Request data:
 
 * `challenge` (string, required): the base64-encoded string to verify with
+
+Possible response status values are: `success`, `invalid_challenge`
 
 Response data:
 

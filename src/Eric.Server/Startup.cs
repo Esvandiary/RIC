@@ -44,6 +44,7 @@ public class Startup
 
         List<IServerWSEndpoint> wsEndpoints = new();
         wsEndpoints.Add(new HomeServer(coreServices));
+        wsEndpoints.Add(new ChatServer(coreServices));
         // TODO
 
         app.UseEndpoints(endpoints =>

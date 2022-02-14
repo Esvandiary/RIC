@@ -1,4 +1,4 @@
-namespace TinyCart.Eric.Messages.V0.Home;
+namespace TinyCart.Eric.Messages.V0;
 
 public class ChallengeRequest
 {
