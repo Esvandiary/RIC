@@ -66,6 +66,7 @@ public class Startup
                             await conn.ReadWhileOpenAsync();
                             await ep.WebSocketDisconnected(conn, context);
                             try { await conn.CloseAsync("socket closed"); } catch (Exception) {}
+                            conn.Dispose();
                         }
                         else
                         {

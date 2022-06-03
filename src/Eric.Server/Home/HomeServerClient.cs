@@ -98,6 +98,7 @@ public class HomeServerClient
                 ServerIdentity = m_server.Identity,
                 UserIdentity = new UserIdentity {
                     Name = user.Username,
+                    Type = "user",
                     PublicKey = PublicKey.FromRSAKeys(user.Keys),
                     HomeServerPublicKey = PublicKey.FromRSAKeys(m_server.Keys),
                     HomeServerURL = m_server.PublishedURL },

@@ -4,6 +4,8 @@ public class UserIdentity
 {
     [JsonProperty("name", Required = Required.Always)]
     public string Name { get; set; } = String.Empty;
+    [JsonProperty("type", Required = Required.Always)]
+    public string Type { get; set; } = String.Empty;
     [JsonProperty("pubkey", Required = Required.Always)]
     public PublicKey PublicKey { get; set; } = new();
     [JsonProperty("home_server", Required = Required.Always)]
