@@ -226,6 +226,20 @@ public class WSTextConnection : WSConnection, IDisposable
     }
 #endregion
 
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !m_disposed)
+        {
+            m_messageHandlers.Clear();
+            m_requestHandlers.Clear();
+
+            foreach (var r in m_requests)
+                r.Value.SetCanceled();
+            m_requests.Clear();
+        }
+        base.Dispose(disposing);
+    }
+
     private uint m_nextConversationID;
     private MessageValidator m_validator;
     private ConcurrentDictionary<uint, TaskCompletionSource<Response>> m_requests = new();

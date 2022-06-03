@@ -53,7 +53,7 @@ public abstract class WSConnection : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
         if (disposing && !m_disposed)
         {
