@@ -46,25 +46,28 @@ public static class Program
             new Logging(new SerilogLoggerFactory(sLogger)));
         var logger = cs.Logging.GetLogger("client");
 
-        WSTextConnection? homeConnection = null;
-        WSTextConnection? chatConnection = null;
+        JSONCommunicator? homeCommunicator = null;
+        JSONCommunicator? chatCommunicator = null;
         try
         {
             logger.Info($"going to connect to {args[0]} ...");
             var baseUri = new Uri(args[0]);
 
             var wsHome = new ClientWebSocket();
+            foreach (var name in WSProtocol.Names)
+                wsHome.Options.AddSubProtocol(name);
             var homeUri = new Uri(baseUri, "ric0_home");
             await wsHome.ConnectAsync(homeUri, CancellationToken.None);
-            homeConnection = new WSTextConnection(wsHome, homeUri.AbsoluteUri, logger, true);
-            _ = homeConnection.ReadWhileOpenAsync();
+            var homeConn = WSProtocol.CreateConnection(wsHome, homeUri.AbsoluteUri, logger, true);
+            homeCommunicator = new JSONCommunicator((IJSONConnection)homeConn, logger);
+            _ = homeCommunicator.Connection.ReadWhileOpenAsync();
 
             byte[] testData = new byte[64];
             Random.Shared.NextBytes(testData);
 
             logger.Info("sending challenge to home server");
             var creq = new ChallengeRequest { Challenge = Convert.ToBase64String(testData) };
-            var cresult = await homeConnection.SendRequestAndWaitAsync("challenge", JObject.FromObject(creq));
+            var cresult = await homeCommunicator.SendRequestAndWaitAsync("challenge", JObject.FromObject(creq));
             logger.Info($"got response, status: {cresult.Status}");
             if (cresult.Status != "success")
             {
@@ -87,7 +90,7 @@ public static class Program
             var rreq = new RegisterRequest {
                 Username = "test",
                 Password = new Messages.V0.Password { Data = "potato", Format = "plaintext" } };
-            var rresult = await homeConnection.SendRequestAndWaitAsync("register", JObject.FromObject(rreq));
+            var rresult = await homeCommunicator.SendRequestAndWaitAsync("register", JObject.FromObject(rreq));
             logger.Info($"got response, status: {rresult.Status}");
             if (rresult.Status != "success")
             {
@@ -103,7 +106,7 @@ public static class Program
                 Password = new Messages.V0.Password { Data = "potato", Format = "plaintext" },
                 ClientApp = ClientApp,
             };
-            var lresult =  await homeConnection.SendRequestAndWaitAsync("login", JObject.FromObject(lreq));
+            var lresult =  await homeCommunicator.SendRequestAndWaitAsync("login", JObject.FromObject(lreq));
             logger.Info($"got response, status: {lresult.Status}");
             if (lresult.Status != "success")
             {
@@ -116,15 +119,18 @@ public static class Program
 
 
             var wsChat = new ClientWebSocket();
+            foreach (var name in WSProtocol.Names)
+                wsChat.Options.AddSubProtocol(name);
             var chatUri = new Uri(baseUri, "ric0_chat");
             await wsChat.ConnectAsync(chatUri, CancellationToken.None);
-            chatConnection = new WSTextConnection(wsChat, chatUri.AbsoluteUri, logger, true);
-            _ = chatConnection.ReadWhileOpenAsync();
+            var chatConn = WSProtocol.CreateConnection(wsChat, homeUri.AbsoluteUri, logger, true);
+            chatCommunicator = new JSONCommunicator((IJSONConnection)chatConn, logger);
+            _ = chatCommunicator.Connection.ReadWhileOpenAsync();
 
             Random.Shared.NextBytes(testData);
             logger.Info("sending challenge to chat server");
             creq = new ChallengeRequest { Challenge = Convert.ToBase64String(testData) };
-            cresult = await chatConnection.SendRequestAndWaitAsync("challenge", JObject.FromObject(creq));
+            cresult = await chatCommunicator.SendRequestAndWaitAsync("challenge", JObject.FromObject(creq));
             logger.Info($"got response, status: {cresult.Status}");
             if (cresult.Status != "success")
             {
@@ -146,7 +152,7 @@ public static class Program
 
             logger.Info("signing chat server key with our privkey...");
             var sreq = new SignRequest { Messages = new() { cresp.PublicKey.KeyData } };
-            var sresult = await homeConnection.SendRequestAndWaitAsync("sign", JObject.FromObject(sreq));
+            var sresult = await homeCommunicator.SendRequestAndWaitAsync("sign", JObject.FromObject(sreq));
             logger.Info($"got response, status: {sresult.Status}");
             if (sresult.Status != "success")
             {
@@ -163,7 +169,7 @@ public static class Program
                 User = lresp!.UserIdentity,
                 Challenge = sresp!.SignedHashes[0],
             };
-            var connresult = await chatConnection.SendRequestAndWaitAsync("connect", JObject.FromObject(connreq));
+            var connresult = await chatCommunicator.SendRequestAndWaitAsync("connect", JObject.FromObject(connreq));
             logger.Info($"got response, status: {connresult.Status}");
             if (connresult.Status != "success")
             {
@@ -173,18 +179,19 @@ public static class Program
             }
             var connresp = connresult.Data.ToObject<ConnectSuccessResponse>();
             logger.Info($"connected to chat server {connresp!.ServerIdentity.Name}");
-
-            await chatConnection.CloseAsync("application exiting");
-            await homeConnection.CloseAsync("application exiting");
-            chatConnection = null;
-            homeConnection = null;
         }
         finally
         {
-            if (chatConnection != null)
-                await chatConnection!.CloseAsync("application exiting");
-            if (homeConnection != null)
-                await homeConnection!.CloseAsync("application exiting");
+            if (chatCommunicator != null)
+            {
+                await chatCommunicator!.Connection.CloseAsync("application exiting");
+                chatCommunicator!.Dispose();
+            }
+            if (homeCommunicator != null)
+            {
+                await homeCommunicator!.Connection.CloseAsync("application exiting");
+                homeCommunicator!.Dispose();
+            }
             sLogger.Dispose();
         }
     }

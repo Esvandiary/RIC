@@ -2,13 +2,24 @@
 
 The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-RIC clients and servers ("endpoints") communicate via WebSocket - specifically the standardised version in [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455).
-Servers MUST provide an encrypted (`wss://`) WebSocket endpoint for clients to connect to, and MUST NOT provide an unencrypted (`ws://`) endpoint. Commensurately, clients MUST NOT support connecting to unencrypted servers.
+RIC clients and servers ("endpoints") communicate via WebSocket - specifically the version standardised in [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455).  
+Servers MUST provide an encrypted (`wss://`) WebSocket endpoint for clients to connect to, and MUST NOT provide an unencrypted (`ws://`) endpoint. Commensurately, clients MUST NOT support connecting to unencrypted servers.  
 Servers SHOULD support the per-message compression extension to WebSocket as defined in [RFC 7692](https://datatracker.ietf.org/doc/html/rfc7692).
 
-All RIC messages MUST be valid JSON messages per [RFC 7159](https://datatracker.ietf.org/doc/html/rfc7159) and the root JSON element SHALL be an object (dictionary).
 
-All RIC messages MUST be encoded in UTF-8 without a byte order mark (BOM).
+## WebSocket subprotocols
+
+RIC allows for communicating via different encoding formats; these are negotiated on initial connection via WebSocket subprotocols. RIC clients MUST specify at least one subprotocol when connecting to any RIC server, and they SHOULD specify all the subprotocols they support.
+
+* `json`: JSON-encoded data as specified in [RFC 7159](https://datatracker.ietf.org/doc/html/rfc7159)
+  * All messages in this format MUST be sent as a text type WebSocket message.
+  * All messages in this format MUST be encoded in UTF-8 without a byte order mark (BOM).
+  * All messages in this format MUST be valid JSON, and the root JSON element SHALL be an object (dictionary).
+  * RIC servers MUST support this subprotocol.
+* `bson`: BSON-encoded data as specified in the [BSON v1.1 spec](https://bsonspec.org/spec.html).
+  * All messages in this format MUST be sent as a binary type WebSocket message.
+  * All messages in this format MUST decode to valid JSON, and the root element SHALL be an object (dictionary).
+  * RIC servers SHOULD support this subprotocol, and SHOULD prefer it where supported.
 
 
 ## Message format

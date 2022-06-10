@@ -42,9 +42,10 @@ public class HomeServer : IServerWSEndpoint
     public Task<WSConnection> WebSocketConnected(WebSocket socket, HttpContext context)
     {
         var ep = new IPEndPoint(context.Connection.RemoteIpAddress!, context.Connection.RemotePort);
-        m_logger.Info($"WebSocket connected from {ep.ToString()}");
-        var conn = new WSTextConnection(socket, ep.ToString(), Services.Logging.GetLogger<WSTextConnection>(), false);
-        var client = new HomeServerClient(this, conn);
+        m_logger.Info($"WebSocket connected from {ep.ToString()} using protocol {socket.SubProtocol}");
+        var conn = WSProtocol.CreateConnection(socket, ep.ToString(), Services.Logging.GetLogger<WSConnection>(), false);
+        var comm = new JSONCommunicator((IJSONConnection)conn, Services.Logging.GetLogger<JSONCommunicator>());
+        var client = new HomeServerClient(this, comm);
         m_clients[conn] = client;
         return Task.FromResult<WSConnection>(conn);
     }

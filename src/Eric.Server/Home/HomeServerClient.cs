@@ -6,22 +6,22 @@ using TinyCart.Eric.Messages.V0.Home;
 
 public class HomeServerClient
 {
-    public HomeServerClient(HomeServer server, WSTextConnection conn)
+    public HomeServerClient(HomeServer server, JSONCommunicator comm)
     {
         m_server = server;
-        m_conn = conn;
-        m_logger = server.Services.Logging.GetLogger($"HomeServerClient[{m_conn.RemoteAddress}]");
+        m_comm = comm;
+        m_logger = server.Services.Logging.GetLogger($"HomeServerClient[{m_comm.Connection.RemoteAddress}]");
 
-        m_conn.SetRequestHandler("challenge", HandleChallengeRequest);
-        m_conn.SetRequestHandler("register", HandleRegisterRequest);
-        m_conn.SetRequestHandler("login", HandleLoginRequest);
-        m_conn.SetRequestHandler("logout", HandleLogoutRequest);
-        m_conn.SetRequestHandler("decrypt", HandleDecryptRequest);
-        m_conn.SetRequestHandler("sign", HandleSignRequest);
+        m_comm.SetRequestHandler("challenge", HandleChallengeRequest);
+        m_comm.SetRequestHandler("register", HandleRegisterRequest);
+        m_comm.SetRequestHandler("login", HandleLoginRequest);
+        m_comm.SetRequestHandler("logout", HandleLogoutRequest);
+        m_comm.SetRequestHandler("decrypt", HandleDecryptRequest);
+        m_comm.SetRequestHandler("sign", HandleSignRequest);
     }
 
 
-    private Task<WSTextConnection.Response> HandleChallengeRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleChallengeRequest(JSONCommunicator comm, string request, JObject data)
     {
         try
         {
@@ -31,33 +31,33 @@ public class HomeServerClient
             ChallengeSuccessResponse result = new() {
                 PublicKey = PublicKey.FromRSAKeys(m_server.Keys),
                 Response = Convert.ToBase64String(response) };
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = JObject.FromObject(result) });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(result) });
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (Exception)
         {
             // TODO: better exceptions
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
-    private Task<WSTextConnection.Response> HandleRegisterRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleRegisterRequest(JSONCommunicator comm, string request, JObject data)
     {
         try
         {
             var rdata = data.ToObject<RegisterRequest>()!;
             var user = m_server.RegisterUser(rdata.Username, rdata.Password, rdata.JoinToken);
 
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = new JObject() });
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (CredentialsException ex)
         {
@@ -68,24 +68,24 @@ public class HomeServerClient
                 _ => "unknown_error"
             };
             // TODO: write info struct
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
         }
         catch (JoinPolicyException)
         {
             string status = !String.IsNullOrEmpty(data.Value<string>("join_token")) ? "invalid_join_token" : "join_token_required";
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
         }
         catch (Exception)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
-    private Task<WSTextConnection.Response> HandleLoginRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleLoginRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user != null)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "already_logged_in", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "already_logged_in", Data = new JObject() });
         }
 
         try
@@ -107,12 +107,12 @@ public class HomeServerClient
 
             m_user = user;
 
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (CredentialsException ex)
         {
@@ -125,36 +125,36 @@ public class HomeServerClient
                 _ => "unknown_error"
             };
             // TODO: write info struct
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
         }
         catch (JoinPolicyException)
         {
             string status = !String.IsNullOrEmpty(data.Value<string>("join_token")) ? "invalid_join_token" : "join_token_required";
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
         }
         catch (Exception)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
-    private Task<WSTextConnection.Response> HandleLogoutRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleLogoutRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user == null)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "not_logged_in", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "not_logged_in", Data = new JObject() });
         }
 
         m_user = null;
 
-        return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = new JObject() });
+        return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = new JObject() });
     }
 
-    private Task<WSTextConnection.Response> HandleDecryptRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleDecryptRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user == null)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "not_logged_in", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "not_logged_in", Data = new JObject() });
         }
 
         try
@@ -179,30 +179,30 @@ public class HomeServerClient
             if (failedMessages.Count == 0)
             {
                 DecryptSuccessResponse response = new() { DecryptedMessages = decryptedMessages };
-                return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
+                return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
             }
             else
             {
                 DecryptFailureResponse failResponse = new() { InvalidMessages = failedMessages };
-                return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_messages", Data = JObject.FromObject(failResponse) });
+                return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_messages", Data = JObject.FromObject(failResponse) });
             }
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (Exception)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
-    private Task<WSTextConnection.Response> HandleSignRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleSignRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user == null)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "not_logged_in", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "not_logged_in", Data = new JObject() });
         }
 
         // TODO: check hash format matches
@@ -229,27 +229,27 @@ public class HomeServerClient
             if (failedMessages.Count == 0)
             {
                 SignSuccessResponse response = new() { SignedHashes = signedHashes };
-                return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
+                return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
             }
             else
             {
                 SignFailureResponse failResponse = new() { InvalidMessages = failedMessages, SupportedHashes = new() }; // TODO
-                return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_messages", Data = JObject.FromObject(failResponse) });
+                return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_messages", Data = JObject.FromObject(failResponse) });
             }
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (Exception)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
     private HomeServer m_server;
-    private WSTextConnection m_conn;
+    private JSONCommunicator m_comm;
     private HomeServerUser? m_user;
     private Logger m_logger;
 }

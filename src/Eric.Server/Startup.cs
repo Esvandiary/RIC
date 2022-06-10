@@ -41,6 +41,7 @@ public class Startup
         // init
         var coreServices = new CoreServices(
             new Logging(app.ApplicationServices.GetRequiredService<ILoggerFactory>()));
+        var logger = coreServices.Logging.GetLogger<Startup>();
 
         List<IServerWSEndpoint> wsEndpoints = new();
         wsEndpoints.Add(new HomeServer(coreServices));
@@ -61,12 +62,21 @@ public class Startup
                     {
                         if (context.WebSockets.IsWebSocketRequest)
                         {
-                            WebSocket ws = await context.WebSockets.AcceptWebSocketAsync();
-                            var conn = await ep.WebSocketConnected(ws, context);
-                            await conn.ReadWhileOpenAsync();
-                            await ep.WebSocketDisconnected(conn, context);
-                            try { await conn.CloseAsync("socket closed"); } catch (Exception) {}
-                            conn.Dispose();
+                            string? protocol = WSProtocol.Names.FirstOrDefault(t => context.WebSockets.WebSocketRequestedProtocols.Contains(t));
+                            if (!String.IsNullOrEmpty(protocol))
+                            {
+                                logger.Info("Accepting WebSocket using protocol {:s}", protocol);
+                                WebSocket ws = await context.WebSockets.AcceptWebSocketAsync(protocol);
+                                var conn = await ep.WebSocketConnected(ws, context);
+                                await conn.ReadWhileOpenAsync();
+                                await ep.WebSocketDisconnected(conn, context);
+                                try { await conn.CloseAsync("socket closed"); } catch (Exception) {}
+                                conn.Dispose();
+                            }
+                            else
+                            {
+                                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                            }
                         }
                         else
                         {

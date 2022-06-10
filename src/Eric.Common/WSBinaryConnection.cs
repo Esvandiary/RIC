@@ -5,11 +5,11 @@ using System.Net.WebSockets;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-public class WSTextConnection : WSConnection, IDisposable
+public class WSBinaryConnection : WSConnection, IDisposable
 {
-    public delegate Task TextReceivedAction(string message);
+    public delegate Task BytesReceivedAction(byte[] message);
 
-    public WSTextConnection(WebSocket socket, string remote, Logger logger, bool isClient)
+    public WSBinaryConnection(WebSocket socket, string remote, Logger logger, bool isClient)
         : base(socket, remote, logger, isClient)
     {
     }
@@ -18,9 +18,9 @@ public class WSTextConnection : WSConnection, IDisposable
     {
         try
         {
-            string? msg = null;
-            while (!String.IsNullOrEmpty(msg = await ReceiveTextAsync()))
-                await (ReceivedTextHandler?.Invoke(msg!) ?? Task.CompletedTask);
+            byte[]? msg = null;
+            while ((msg = await ReceiveBytesAsync()) != null)
+                await (ReceivedBytesHandler?.Invoke(msg!) ?? Task.CompletedTask);
         }
         catch (Exception ex)
         {
@@ -28,8 +28,8 @@ public class WSTextConnection : WSConnection, IDisposable
         }
     }
 
-    public async Task<string?> ReceiveTextAsync() => await ReceiveTextAsync(CancellationToken.None);
-    public async Task<string?> ReceiveTextAsync(CancellationToken token)
+    public async Task<byte[]?> ReceiveBytesAsync() => await ReceiveBytesAsync(CancellationToken.None);
+    public async Task<byte[]?> ReceiveBytesAsync(CancellationToken token)
     {
         // only one thread should ever be trying to receive here, so ensure it
         m_buffer.SetLength(0);
@@ -65,10 +65,7 @@ public class WSTextConnection : WSConnection, IDisposable
                 }
             }
 
-            if (!m_disposed && m_socket.State == WebSocketState.Open)
-                return TextUtil.UTF8NoBOM.GetString(m_buffer.ToArray());
-            else
-                return null;
+            return m_buffer.ToArray();
         }
         finally
         {
@@ -76,22 +73,13 @@ public class WSTextConnection : WSConnection, IDisposable
         }
     }
 
-    public async Task SendTextAsync(string text) => await SendTextAsync(text, CancellationToken.None);
-    public async Task SendTextAsync(string text, CancellationToken token)
+    public async Task SendBytesAsync(byte[] data) => await SendBytesAsync(data, CancellationToken.None);
+    public async Task SendBytesAsync(byte[] data, CancellationToken token)
     {
-        var buf = ArrayPool<byte>.Shared.Rent(TextUtil.UTF8NoBOM.GetByteCount(text));
-        int len = TextUtil.UTF8NoBOM.GetBytes(text, buf);
-        try
-        {
-            await m_socket.SendAsync(new ArraySegment<byte>(buf, 0, len), WebSocketMessageType.Text, true, token);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buf);
-        }
+        await m_socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, token);
     }
 
-    public TextReceivedAction? ReceivedTextHandler { get; set; }
+    public BytesReceivedAction? ReceivedBytesHandler { get; set; }
 
     public int BufferSize { get; set; } = DefaultBufferSize;
     private MemoryStream m_buffer = new MemoryStream(DefaultBufferSize);

@@ -6,19 +6,19 @@ using TinyCart.Eric.Messages.V0.Chat;
 
 public class ChatServerClient
 {
-    public ChatServerClient(ChatServer server, WSTextConnection conn)
+    public ChatServerClient(ChatServer server, JSONCommunicator comm)
     {
         m_server = server;
-        m_conn = conn;
-        m_logger = server.Services.Logging.GetLogger($"ChatServerClient[{m_conn.RemoteAddress}]");
+        m_comm = comm;
+        m_logger = server.Services.Logging.GetLogger($"ChatServerClient[{m_comm.Connection.RemoteAddress}]");
 
-        m_conn.SetRequestHandler("challenge", HandleChallengeRequest);
-        m_conn.SetRequestHandler("connect", HandleConnectRequest);
-        m_conn.SetRequestHandler("disconnect", HandleDisconnectRequest);
+        m_comm.SetRequestHandler("challenge", HandleChallengeRequest);
+        m_comm.SetRequestHandler("connect", HandleConnectRequest);
+        m_comm.SetRequestHandler("disconnect", HandleDisconnectRequest);
     }
 
 
-    private Task<WSTextConnection.Response> HandleChallengeRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleChallengeRequest(JSONCommunicator comm, string request, JObject data)
     {
         try
         {
@@ -28,25 +28,25 @@ public class ChatServerClient
             ChallengeSuccessResponse result = new() {
                 PublicKey = PublicKey.FromRSAKeys(m_server.Keys),
                 Response = Convert.ToBase64String(response) };
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = JObject.FromObject(result) });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(result) });
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (Exception)
         {
             // TODO: better exceptions
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
-    private Task<WSTextConnection.Response> HandleConnectRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleConnectRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user != null)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "already_connected", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "already_connected", Data = new JObject() });
         }
 
         try
@@ -57,7 +57,7 @@ public class ChatServerClient
             var keys = RSAKeys.FromPublicKey(Convert.FromBase64String(rdata.User.PublicKey.KeyData));
             if (!keys.Verify(m_server.Keys.PublicKey, Convert.FromBase64String(rdata.Challenge)))
             {
-                return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_challenge", Data = new JObject() });
+                return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_challenge", Data = new JObject() });
             }
 
             // TODO: m_server.ConnectUser(rdata.User);
@@ -69,12 +69,12 @@ public class ChatServerClient
 
             m_user = rdata.User;
 
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (CredentialsException ex)
         {
@@ -85,24 +85,24 @@ public class ChatServerClient
                 _ => "unknown_error"
             };
             // TODO: write info struct
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
         }
         catch (JoinPolicyException)
         {
             string status = !String.IsNullOrEmpty(data.Value<string>("join_token")) ? "invalid_join_token" : "join_token_required";
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = status, Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
         }
         catch (Exception)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
-    private Task<WSTextConnection.Response> HandleDisconnectRequest(WSTextConnection conn, string request, JObject data)
+    private Task<JSONCommunicator.Response> HandleDisconnectRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user == null)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "not_connected", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "not_connected", Data = new JObject() });
         }
 
         try
@@ -111,21 +111,21 @@ public class ChatServerClient
             // TODO: m_server.DisconnectUser(m_user, rdata.Reason);
             m_user = null;
 
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "success", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = new JObject() });
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
         }
         catch (Exception)
         {
-            return Task.FromResult<WSTextConnection.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
         }
     }
 
     private ChatServer m_server;
-    private WSTextConnection m_conn;
+    private JSONCommunicator m_comm;
     private UserIdentity? m_user;
     private Logger m_logger;
 }
