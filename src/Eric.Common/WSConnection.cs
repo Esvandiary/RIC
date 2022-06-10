@@ -16,6 +16,8 @@ public abstract class WSConnection : IDisposable
         m_stoppedReadingSource.Cancel();
     }
 
+    public bool IsOpen { get => !m_disposed && m_socket?.State == WebSocketState.Open; }
+
     public async Task ReadWhileOpenAsync()
     {
         m_stoppedReadingSource.TryReset();

@@ -41,7 +41,7 @@ public class ChatServer : IServerWSEndpoint
     public Task<WSConnection> WebSocketConnected(WebSocket socket, HttpContext context)
     {
         var ep = new IPEndPoint(context.Connection.RemoteIpAddress!, context.Connection.RemotePort);
-        m_logger.Info($"WebSocket connected from {ep.ToString()} using protocol {socket.SubProtocol}");
+        m_logger.Info("WebSocket connected from {0} using protocol {1}", ep.ToString(), socket.SubProtocol ?? "(none)");
         var conn = WSProtocol.CreateConnection(socket, ep.ToString(), Services.Logging.GetLogger<WSConnection>(), false);
         var comm = new JSONCommunicator((IJSONConnection)conn, Services.Logging.GetLogger<JSONCommunicator>());
         var client = new ChatServerClient(this, comm);
@@ -51,7 +51,7 @@ public class ChatServer : IServerWSEndpoint
 
     public Task WebSocketDisconnected(WSConnection conn, HttpContext context)
     {
-        m_logger.Info($"WebSocket disconnected from {conn.RemoteAddress}");
+        m_logger.Info("WebSocket disconnected from {0}", conn.RemoteAddress);
         if (m_clients.TryRemove(conn, out var client))
         {
             // TODO: client.Disconnect() ?
@@ -62,6 +62,7 @@ public class ChatServer : IServerWSEndpoint
 
 
     // TODO: persist these...
+    // TODO: dispose
     public RSAKeys Keys { get; init; }
 
     public JoinPolicy ConnectPolicy { get; set; } = JoinPolicy.Enabled;

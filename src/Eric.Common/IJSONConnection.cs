@@ -3,6 +3,7 @@ namespace TinyCart.Eric;
 public interface IJSONConnection : IDisposable
 {
     string RemoteAddress { get; }
+    bool IsOpen { get; }
 
     Task SendJSONAsync(JObject obj);
     Task ReadWhileOpenAsync();

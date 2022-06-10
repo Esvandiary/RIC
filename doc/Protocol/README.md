@@ -3,7 +3,7 @@
 The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
 RIC clients and servers ("endpoints") communicate via WebSocket - specifically the version standardised in [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455).  
-Servers MUST provide an encrypted (`wss://`) WebSocket endpoint for clients to connect to, and MUST NOT provide an unencrypted (`ws://`) endpoint. Commensurately, clients MUST NOT support connecting to unencrypted servers.  
+Servers MUST provide an encrypted (`wss://`) WebSocket endpoint for clients to connect to, and MUST NOT provide an unencrypted (`ws://`) endpoint except for software testing purposes. Commensurately, clients MUST NOT support connecting to unencrypted servers except for software testing purposes.  
 Servers SHOULD support the per-message compression extension to WebSocket as defined in [RFC 7692](https://datatracker.ietf.org/doc/html/rfc7692).
 
 

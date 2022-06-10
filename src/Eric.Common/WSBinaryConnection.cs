@@ -24,7 +24,7 @@ public class WSBinaryConnection : WSConnection, IDisposable
         }
         catch (Exception ex)
         {
-            m_logger.Error(ex, $"Exception in WebSocket read handler: {ex.Message}");
+            m_logger.Error(ex, "Exception in WebSocket read handler: {0}", ex.Message);
         }
     }
 

@@ -2,7 +2,7 @@ namespace TinyCart.Eric;
 
 using System.Security.Cryptography;
 
-public class RSAKeys
+public class RSAKeys : IDisposable
 {
     public static RSAKeys FromPublicKey(byte[] pubkey)
     {
@@ -24,6 +24,16 @@ public class RSAKeys
     public byte[] PublicKey { get => m_rsa.ExportRSAPublicKey(); }
 
     public string FormatName { get => RSAConstants.FormatName; }
+
+    public void Dispose() => Dispose(true);
+    public void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            m_rsa.Dispose();
+            GC.SuppressFinalize(this);
+        }
+    }
 
     private RSA m_rsa;
 }

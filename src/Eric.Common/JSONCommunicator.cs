@@ -26,6 +26,9 @@ public class JSONCommunicator
         m_validator = validator ?? DefaultValidator;
     }
 
+    public async Task CloseAsync(string message) => await m_conn.CloseAsync(message);
+    public async Task CloseAsync(string message, CancellationToken token) => await m_conn.CloseAsync(message, token);
+
     public async Task SendMessageAsync(string name, JObject data)
     {
         JObject root = new JObject();
@@ -117,19 +120,19 @@ public class JSONCommunicator
                 }
                 else
                 {
-                    m_logger.Error($"failed to handle response to convID {convid}: unknown request");
+                    m_logger.Error("failed to handle response to convID {0}: unknown request", convid);
                 }
                 break;
             }
             default:
-                m_logger.Error($"AttemptDispatch received invalid message type {type}");
+                m_logger.Error("AttemptDispatch received invalid message type {0}", type);
                 break;
             }
         }
         catch (Exception ex)
         {
-            m_logger.Error($"EXCEPTION in AttemptDispatch: {ex.Message}");
-            m_logger.Error($"stack trace: {ex.StackTrace}");
+            m_logger.Error("EXCEPTION in AttemptDispatch: {0}", ex.Message);
+            m_logger.Error("stack trace: {0}", ex.StackTrace ?? "(none)");
         }
     }
 

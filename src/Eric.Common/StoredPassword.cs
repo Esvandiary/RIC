@@ -1,5 +1,6 @@
 namespace TinyCart.Eric;
 
+using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using TinyCart.Eric.Extensions;
 

@@ -17,6 +17,14 @@ public static class ArrayExtensions
     }
 }
 
+public static class EnumerableExtensions
+{
+    public static IEnumerable<T> Yield<T>(this T item)
+    {
+        yield return item;
+    }
+}
+
 public static class AsyncExtensions
 {
     /// <summary>

@@ -42,7 +42,7 @@ public class HomeServer : IServerWSEndpoint
     public Task<WSConnection> WebSocketConnected(WebSocket socket, HttpContext context)
     {
         var ep = new IPEndPoint(context.Connection.RemoteIpAddress!, context.Connection.RemotePort);
-        m_logger.Info($"WebSocket connected from {ep.ToString()} using protocol {socket.SubProtocol}");
+        m_logger.Info("WebSocket connected from {0} using protocol {1}", ep.ToString(), socket.SubProtocol ?? "(none)");
         var conn = WSProtocol.CreateConnection(socket, ep.ToString(), Services.Logging.GetLogger<WSConnection>(), false);
         var comm = new JSONCommunicator((IJSONConnection)conn, Services.Logging.GetLogger<JSONCommunicator>());
         var client = new HomeServerClient(this, comm);
@@ -52,7 +52,7 @@ public class HomeServer : IServerWSEndpoint
 
     public Task WebSocketDisconnected(WSConnection conn, HttpContext context)
     {
-        m_logger.Info($"WebSocket disconnected from {conn.RemoteAddress}");
+        m_logger.Info("WebSocket disconnected from {0}", conn.RemoteAddress);
         if (m_clients.TryRemove(conn, out var client))
         {
             // TODO: client.Disconnect() ?
@@ -80,10 +80,9 @@ public class HomeServer : IServerWSEndpoint
             if (m_users.ContainsKey(username))
                 throw new CredentialsException(CredentialsException.Credential.Username, "username in use");
             
-            if (password.Format != "plaintext")
-                throw new CredentialsException(CredentialsException.Credential.Password, "password must be in plaintext");
+            string plainPassword = Password.Decode(password, Keys);
 
-            var user = HomeServerUser.CreateNew(username, password.Data);
+            var user = HomeServerUser.CreateNew(username, plainPassword);
             m_users[username] = user;
 
             if (RegistrationPolicy == JoinPolicy.JoinTokenOnly)
@@ -101,13 +100,12 @@ public class HomeServer : IServerWSEndpoint
         if (LoginPolicy == JoinPolicy.Disabled)
             throw new JoinPolicyException("attempted to log in with logins disabled");
 
-        if (password.Format != "plaintext")
-            throw new CredentialsException(CredentialsException.Credential.Password, "password must be in plaintext");
+        string plainPassword = Password.Decode(password, Keys);
 
         if (!m_users.TryGetValue(username, out var user))
             throw new CredentialsException(CredentialsException.Credential.Username, "unknown username");
 
-        if (!user.Password.Check(password.Data))
+        if (!user.Password.Check(plainPassword))
             throw new CredentialsException(CredentialsException.Credential.Password, "incorrect password");
 
         // TODO: MFA
@@ -133,6 +131,7 @@ public class HomeServer : IServerWSEndpoint
     }
 
     // TODO: persist these...
+    // TODO: dispose
     public RSAKeys Keys { get; init; }
 
     public JoinPolicy RegistrationPolicy { get; set; } = JoinPolicy.Enabled;

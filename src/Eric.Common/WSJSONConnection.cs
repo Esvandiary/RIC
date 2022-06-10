@@ -30,9 +30,9 @@ public class WSJSONConnection : WSTextConnection, IJSONConnection, IDisposable
         }
         catch (Exception ex)
         {
-            m_logger.Error($"EXCEPTION in AttemptDispatch: {ex.Message}");
-            m_logger.Error($"received data: {message}");
-            m_logger.Error($"stack trace: {ex.StackTrace}");
+            m_logger.Error("EXCEPTION in AttemptDispatch: {0}", ex.Message);
+            m_logger.Error("received data: {0}", message);
+            m_logger.Error("stack trace: {0}", ex.StackTrace ?? "(none)");
         }
         return false;
     }

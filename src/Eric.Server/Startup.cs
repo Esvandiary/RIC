@@ -65,7 +65,7 @@ public class Startup
                             string? protocol = WSProtocol.Names.FirstOrDefault(t => context.WebSockets.WebSocketRequestedProtocols.Contains(t));
                             if (!String.IsNullOrEmpty(protocol))
                             {
-                                logger.Info("Accepting WebSocket using protocol {:s}", protocol);
+                                logger.Info("Accepting WebSocket using protocol {0}", protocol);
                                 WebSocket ws = await context.WebSockets.AcceptWebSocketAsync(protocol);
                                 var conn = await ep.WebSocketConnected(ws, context);
                                 await conn.ReadWhileOpenAsync();
