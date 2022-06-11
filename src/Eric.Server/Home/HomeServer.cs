@@ -29,9 +29,9 @@ public class HomeServer : IServerWSEndpoint
             PublicKey = PublicKey.FromRSAKeys(Keys),
             Name = "Test Server",
             Description = "A server for testing",
-            URL = "ws://localhost:5000"
+            URL = Services.Config.CanonicalURL,
         };
-        PublishedURL = Identity.URL;
+        PublishedURL = Services.Config.IsURLPublic ? Identity.URL : null;
     }
 
 #region IServerWSEndpoint

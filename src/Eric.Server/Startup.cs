@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +15,10 @@ using Microsoft.Extensions.Logging;
 
 public class Startup
 {
+    public Startup(IConfiguration config) => m_config = config;
+
+    private IConfiguration m_config;
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllersWithViews();
@@ -40,6 +43,7 @@ public class Startup
 
         // init
         var coreServices = new CoreServices(
+            m_config.GetSection("EricServer").Get<ServerConfig>(),
             new Logging(app.ApplicationServices.GetRequiredService<ILoggerFactory>()));
         var logger = coreServices.Logging.GetLogger<Startup>();
 

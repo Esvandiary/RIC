@@ -1,6 +1,5 @@
 namespace TinyCart.Eric;
 
-using System.Net;
 using System.Net.WebSockets;
 
 public class WSJSONConnection : WSTextConnection, IJSONConnection, IDisposable

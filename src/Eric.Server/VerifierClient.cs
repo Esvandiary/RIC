@@ -29,7 +29,4 @@ public class VerifierClient : ClientBase
         EnsureServerIdentityVerified();
         return m_serverKeys!.PublicKey.SequenceEqual(key.PublicKey);
     }
-
-    private ServerIdentity? m_serverIdentity;
-    private AppInfo? m_serverAppInfo;
 }

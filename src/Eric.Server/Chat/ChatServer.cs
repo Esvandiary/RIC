@@ -29,7 +29,7 @@ public class ChatServer : IServerWSEndpoint
             PublicKey = PublicKey.FromRSAKeys(Keys),
             Name = "Test Server",
             Description = "A server for testing",
-            URL = "wss://tinycart.local"
+            URL = Services.Config.CanonicalURL,
         };
     }
 

@@ -5,10 +5,13 @@ using TinyCart.Eric.Messages.V0;
 
 public class CoreServices
 {
-    public CoreServices(Logging logging)
+    public CoreServices(ServerConfig config, Logging logging)
     {
+        Config = config;
         Logging = logging;
     }
+
+    public ServerConfig Config { get; }
 
     public Logging Logging { get; }
 
