@@ -27,7 +27,7 @@ public class ChatServerClient
             byte[] response = m_server.Keys.Sign(challenge);
             ChallengeSuccessResponse result = new() {
                 PublicKey = PublicKey.FromRSAKeys(m_server.Keys),
-                Response = Convert.ToBase64String(response) };
+                Response = response.ToBase64() };
             return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(result) });
         }
         catch (JsonException)

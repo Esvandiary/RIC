@@ -1,9 +1,6 @@
 namespace TinyCart.Eric;
 
-using System.Net;
 using System.Net.WebSockets;
-
-using TinyCart.Eric.Extensions;
 
 public abstract class WSConnection : IDisposable
 {

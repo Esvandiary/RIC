@@ -133,11 +133,14 @@ The messages valid on each of the paths is documented in their own documents
 
 ### UserIdentity (object)
 
-* `name` (string, required): the nickname of the user
+* `name` (string, required): the server-local nickname of the user
 * `type` (string, required): the type of the user
   * This must be one of the values: `user`, `bot`, `log_relay`
 * `pubkey` (PublicKey, required): the public key of the user
-* `home_server` (PublicKey, required): the public key of the user's home server
+* `home_server_pubkey` (PublicKey, required): the public key of the user's home server
+* `home_server_user` (string, required): the username of the user on their home server
+* `home_server_user_signature` (string, required): signature of the username
+  * This is a signature of the username, signed by the user's home server, and base64-encoded
 * `home_server_url` (string, optional): the canonical URL of the user's home server
 
 

@@ -1,9 +1,6 @@
 namespace TinyCart.Eric;
 
-using System.Net;
 using System.Net.WebSockets;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class WSBinaryConnection : WSConnection, IDisposable
 {

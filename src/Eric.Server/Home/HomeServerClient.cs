@@ -30,7 +30,7 @@ public class HomeServerClient
             byte[] response = m_server.Keys.Sign(challenge);
             ChallengeSuccessResponse result = new() {
                 PublicKey = PublicKey.FromRSAKeys(m_server.Keys),
-                Response = Convert.ToBase64String(response) };
+                Response = response.ToBase64() };
             return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(result) });
         }
         catch (JsonException)
@@ -101,6 +101,8 @@ public class HomeServerClient
                     Type = "user",
                     PublicKey = PublicKey.FromRSAKeys(user.Keys),
                     HomeServerPublicKey = PublicKey.FromRSAKeys(m_server.Keys),
+                    HomeServerUser = user.Username,
+                    HomeServerUserSignature = m_server.Keys.Sign(user.Username.ToUTF8Bytes()).ToBase64(),
                     HomeServerURL = m_server.PublishedURL },
                 ClientToken = null
             };
@@ -168,7 +170,7 @@ public class HomeServerClient
                 {
                     var decoded = Convert.FromBase64String(msg);
                     var decrypted = m_user!.Keys.Decrypt(decoded);
-                    decryptedMessages.Add(Convert.ToBase64String(decrypted));
+                    decryptedMessages.Add(decrypted.ToBase64());
                 }
                 catch (CryptographicException)
                 {
@@ -218,7 +220,7 @@ public class HomeServerClient
                 {
                     var decoded = Convert.FromBase64String(msg);
                     var signed = m_user!.Keys.Sign(decoded);
-                    signedHashes.Add(Convert.ToBase64String(signed));
+                    signedHashes.Add(signed.ToBase64());
                 }
                 catch (CryptographicException)
                 {

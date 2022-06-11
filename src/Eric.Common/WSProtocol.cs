@@ -1,6 +1,6 @@
-using System.Net.WebSockets;
-
 namespace TinyCart.Eric;
+
+using System.Net.WebSockets;
 
 public static class WSProtocol
 {

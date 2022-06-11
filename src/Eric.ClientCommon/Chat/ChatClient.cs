@@ -42,7 +42,7 @@ public class ChatClient : ClientBase
         {
             ClientApp = m_appInfo,
             User = homeClient.UserIdentity,
-            Challenge = Convert.ToBase64String(signedServerKey),
+            Challenge = signedServerKey.ToBase64(),
         };
         var connresult = await m_comm.SendRequestAndWaitAsync("connect", JObject.FromObject(connreq));
         m_logger.Debug("got chat connect response, status: {0}", connresult.Status);

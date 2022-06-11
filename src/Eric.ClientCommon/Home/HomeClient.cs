@@ -1,7 +1,5 @@
 namespace TinyCart.Eric.Client;
 
-using TinyCart.Eric.Extensions;
-
 using TinyCart.Eric.Messages.V0;
 using TinyCart.Eric.Messages.V0.Home;
 
@@ -82,7 +80,7 @@ public class HomeClient : ClientBase
     public async Task<List<byte[]>> Sign(IEnumerable<byte[]> data)
     {
         m_logger.Debug("sending sign request for {0} message{1}", data.Count(), data.Count() != 1 ? "s" : "");
-        var sreq = new SignRequest { Messages = data.Select(t => Convert.ToBase64String(t)).ToList() };
+        var sreq = new SignRequest { Messages = data.Select(t => t.ToBase64()).ToList() };
         var sresult = await m_comm.SendRequestAndWaitAsync("sign", JObject.FromObject(sreq));
         m_logger.Debug("got sign response, status: {0}", sresult.Status);
         if (sresult.Status != "success")
@@ -100,7 +98,7 @@ public class HomeClient : ClientBase
     public async Task<List<byte[]>> Decrypt(IEnumerable<byte[]> data)
     {
         m_logger.Debug("sending decrypt request for {0} message{1}", data.Count(), data.Count() != 1 ? "s" : "");
-        var sreq = new DecryptRequest { EncryptedMessages = data.Select(t => Convert.ToBase64String(t)).ToList() };
+        var sreq = new DecryptRequest { EncryptedMessages = data.Select(t => t.ToBase64()).ToList() };
         var sresult = await m_comm.SendRequestAndWaitAsync("decrypt", JObject.FromObject(sreq));
         m_logger.Debug("got decrypt response, status: {0}", sresult.Status);
         if (sresult.Status != "success")

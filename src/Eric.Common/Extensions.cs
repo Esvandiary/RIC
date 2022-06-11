@@ -15,6 +15,9 @@ public static class ArrayExtensions
         }
         return hash;
     }
+
+    public static string ToBase64(this byte[] array) => Convert.ToBase64String(array);
+    public static string ToUTF8String(this byte[] array) => TextUtil.UTF8NoBOM.GetString(array);
 }
 
 public static class EnumerableExtensions
@@ -23,6 +26,11 @@ public static class EnumerableExtensions
     {
         yield return item;
     }
+}
+
+public static class StringExtensions
+{
+    public static byte[] ToUTF8Bytes(this string s) => TextUtil.UTF8NoBOM.GetBytes(s);
 }
 
 public static class AsyncExtensions

@@ -8,5 +8,5 @@ public class PublicKey
     public string KeyFormat { get; set; } = String.Empty;
 
     public static PublicKey FromRSAKeys(RSAKeys keys)
-        => new() { KeyData = Convert.ToBase64String(keys.PublicKey), KeyFormat = keys.FormatName };
+        => new() { KeyData = keys.PublicKey.ToBase64(), KeyFormat = keys.FormatName };
 }

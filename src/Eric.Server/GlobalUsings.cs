@@ -8,7 +8,8 @@ global using System.Text;
 global using System.Threading.Tasks;
 global using System.Net.WebSockets;
 
-global using TinyCart.Eric;
-
 global using Newtonsoft.Json;
 global using Newtonsoft.Json.Linq;
+
+global using TinyCart.Eric;
+global using TinyCart.Eric.Extensions;

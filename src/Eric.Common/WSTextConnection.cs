@@ -1,9 +1,6 @@
 namespace TinyCart.Eric;
 
-using System.Net;
 using System.Net.WebSockets;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class WSTextConnection : WSConnection, IDisposable
 {
@@ -66,7 +63,7 @@ public class WSTextConnection : WSConnection, IDisposable
             }
 
             if (!m_disposed && m_socket.State == WebSocketState.Open)
-                return TextUtil.UTF8NoBOM.GetString(m_buffer.ToArray());
+                return m_buffer.ToArray().ToUTF8String();
             else
                 return null;
         }

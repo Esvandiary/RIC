@@ -52,7 +52,7 @@ public abstract class ClientBase : IDisposable
         Random.Shared.NextBytes(randomData);
 
         m_logger.Debug("sending challenge to server");
-        var creq = new ChallengeRequest { Challenge = Convert.ToBase64String(randomData) };
+        var creq = new ChallengeRequest { Challenge = randomData.ToBase64() };
         var cresult = await m_comm.SendRequestAndWaitAsync("challenge", JObject.FromObject(creq));
         m_logger.Debug("got challenge response, status: {0}", cresult.Status);
         if (cresult.Status != "success")

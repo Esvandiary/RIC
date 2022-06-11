@@ -1,6 +1,5 @@
 namespace TinyCart.Eric;
 
-using System.Net;
 using System.Net.WebSockets;
 using Newtonsoft.Json.Bson;
 
