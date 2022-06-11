@@ -90,14 +90,19 @@ The messages valid on each of the paths is documented in their own documents
 
 * `key` (string, required): the base64-encoded key data
 * `format` (string, required): the format of the key data
-  * This value must be one of TODO
+  * This value MUST be `rsa-sha256-oaepsha256-pkcs1`
+  * The format of this field is defined in [the encryption readme](Encryption.md#public-key-encryption)
 
 
 ### Password (object)
 
 * `data` (string, required): the password data
 * `format` (string, required): the format the password is provided in
-  * This must be one of the following values: `plaintext`, `sha-256`
+  * Valid formats:
+    * `plaintext`: the `data` property contains a plaintext password
+    * `rsa-base64`: the `data` property contains a password encrypted with the receiver's public key and base64-encoded
+  * Endpoints MUST support both formats, and MUST prefer `rsa-base64` where possible
+  * More details are available in [the encryption readme](Encryption.md#password-transit)
 
 
 ### ClientAppInfo (object)
