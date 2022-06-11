@@ -31,7 +31,6 @@ public class RSAKeys : IDisposable
         if (disposing)
         {
             m_rsa.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 
