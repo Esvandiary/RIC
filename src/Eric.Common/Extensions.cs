@@ -1,11 +1,23 @@
+using System.Buffers.Text;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace TinyCart.Eric.Extensions;
 
 public static class ArrayExtensions
 {
-    public static int GetSequenceHashCode<T>(this T[] array)
+    public static string ToBase64(this byte[] array) => Convert.ToBase64String(array);
+    public static string ToUTF8String(this byte[] array) => TextUtil.UTF8NoBOM.GetString(array);
+    public static string ToBase64(this ReadOnlySpan<byte> span) => Convert.ToBase64String(span);
+    public static string ToUTF8String(this ReadOnlySpan<byte> span) => TextUtil.UTF8NoBOM.GetString(span);
+    public static string ToBase64(this Span<byte> span) => Convert.ToBase64String(span);
+    public static string ToUTF8String(this Span<byte> span) => TextUtil.UTF8NoBOM.GetString(span);
+}
+
+public static class EnumerableExtensions
+{
+    public static int GetSequenceHashCode<T>(this IEnumerable<T> array)
     {
         int hash = 17;
         foreach (T element in array)
@@ -15,12 +27,9 @@ public static class ArrayExtensions
         }
         return hash;
     }
-
-    public static string ToBase64(this byte[] array) => Convert.ToBase64String(array);
-    public static string ToUTF8String(this byte[] array) => TextUtil.UTF8NoBOM.GetString(array);
 }
 
-public static class EnumerableExtensions
+public static class ObjectExtensions
 {
     public static IEnumerable<T> Yield<T>(this T item)
     {
@@ -33,53 +42,51 @@ public static class StringExtensions
     public static byte[] ToUTF8Bytes(this string s) => TextUtil.UTF8NoBOM.GetBytes(s);
 }
 
-public static class AsyncExtensions
+public static class GuidExtensions
 {
-    /// <summary>
-    /// Allows a cancellation token to be awaited.
-    /// </summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static CancellationTokenAwaiter GetAwaiter(this CancellationToken ct)
+    public static string ToBase64(this Guid guid)
     {
-        // return our special awaiter
-        return new CancellationTokenAwaiter
-        {
-            CancellationToken = ct
-        };
+        Span<byte> guidBytes = stackalloc byte[16];
+        MemoryMarshal.Write(guidBytes, ref guid);
+        return guidBytes.ToBase64();
     }
 
-    /// <summary>
-    /// The awaiter for cancellation tokens.
-    /// </summary>
+    public static Guid FromBase64(Span<byte> array) => MemoryMarshal.Read<Guid>(array);
+}
+
+public static class AsyncExtensions
+{
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static CancellationTokenAwaiter GetAwaiter(this CancellationToken ct)
+        => new CancellationTokenAwaiter(ct);
+
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct CancellationTokenAwaiter : INotifyCompletion, ICriticalNotifyCompletion
     {
         public CancellationTokenAwaiter(CancellationToken cancellationToken)
-        {
-            CancellationToken = cancellationToken;
-        }
+            => _cancellationToken = cancellationToken;
 
-        internal CancellationToken CancellationToken;
+        private readonly CancellationToken _cancellationToken;
 
         public object GetResult()
         {
             // this is called by compiler generated methods when the
             // task has completed. Instead of returning a result, we 
             // just throw an exception.
-            if (IsCompleted) throw new OperationCanceledException();
-            else throw new InvalidOperationException("The cancellation token has not yet been cancelled.");
+            if (IsCompleted)
+                throw new OperationCanceledException();
+            else
+                throw new InvalidOperationException("The cancellation token has not yet been cancelled.");
         }
 
         // called by compiler generated/.net internals to check
         // if the task has completed.
-        public bool IsCompleted => CancellationToken.IsCancellationRequested;
+        public bool IsCompleted => _cancellationToken.IsCancellationRequested;
 
         // The compiler will generate stuff that hooks in
         // here. We hook those methods directly into the
         // cancellation token.
-        public void OnCompleted(Action continuation) =>
-            CancellationToken.Register(continuation);
-        public void UnsafeOnCompleted(Action continuation) =>
-            CancellationToken.Register(continuation);
+        public void OnCompleted(Action continuation) => _cancellationToken.Register(continuation);
+        public void UnsafeOnCompleted(Action continuation) => _cancellationToken.Register(continuation);
     }
 }
