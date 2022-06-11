@@ -11,6 +11,13 @@ public class RSAKeys : IDisposable
         return new RSAKeys(rsa);
     }
 
+    public static RSAKeys FromMessage(Messages.V0.PublicKey message)
+    {
+        if (message.KeyFormat != RSAConstants.FormatName)
+            throw new CredentialsException(CredentialsException.Credential.PublicKey, $"invalid public key format {message.KeyFormat}");
+        return FromPublicKey(Convert.FromBase64String(message.KeyData));
+    }
+
     public RSAKeys(RSA impl)
         => m_rsa = impl;
 

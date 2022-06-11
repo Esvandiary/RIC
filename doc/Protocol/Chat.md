@@ -1,10 +1,11 @@
-# Messages: `/ric0_chat`
+# Path: `/ric0_chat`
+
+## Messages
 
 All messages on this path require the user to have authenticated, unless otherwise specified.
 
 Until authentication is completed (via a `challenge` request followed by a successful `connect` request),
 all messages requiring authentication MUST be ignored and servers SHOULD immediately close the connection if they receive one.
-
 
 
 ### `challenge` (request, reply)
@@ -28,7 +29,7 @@ Response data:
 
 ### `connect` (request, reply)
 
-This message allows the server to verify the client's identity and negotiate their respective capabilities. This request does not require the user to have authenticated.
+This message allows the server to verify the client's identity and negotiate their respective capabilities. This request does not require the user to be authenticated.
 
 `connect` request data:
 
@@ -37,8 +38,7 @@ This message allows the server to verify the client's identity and negotiate the
 * `challenge` (string, required): the server's public key bytes, hashed and signed with the user's private key, base64-encoded
 * `join_token` (string, optional): a join token to connect to this server
 
-
-Possible response status values are: `success`, `already_connected`, `invalid_challenge`, `unrecognised_user`, `disallowed_client`, `disallowed_user`, `invalid_join_token`, `join_token_required`
+Possible response status values are: `success`, `already_connected`, `invalid_challenge`, `invalid_home_server`, `unrecognised_user`, `disallowed_client`, `disallowed_user`, `invalid_join_token`, `join_token_required`
 
 Response data for successful `connect` requests:
 

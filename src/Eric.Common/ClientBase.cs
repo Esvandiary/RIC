@@ -1,9 +1,7 @@
-namespace TinyCart.Eric.Client;
+namespace TinyCart.Eric;
 
 using System.Net.WebSockets;
-using System.Security.Cryptography;
 using TinyCart.Eric.Messages.V0;
-using TinyCart.Eric.Messages.V0.Chat;
 
 public abstract class ClientBase : IDisposable
 {
@@ -27,7 +25,7 @@ public abstract class ClientBase : IDisposable
     }
 
     public bool IsConnected { get => m_comm.Connection.IsOpen; }
-    internal void EnsureConnected()
+    public void EnsureConnected()
     {
         if (!IsConnected)
             throw new InvalidOperationException("cannot perform this action while disconnected");
@@ -37,7 +35,7 @@ public abstract class ClientBase : IDisposable
     public async Task CloseAsync(string message, CancellationToken token) => await m_comm.CloseAsync(message, token);
 
     public bool IsServerIdentityVerified { get => m_serverKeys != null; }
-    internal void EnsureServerIdentityVerified()
+    public void EnsureServerIdentityVerified()
     {
         if (!IsServerIdentityVerified)
             throw new InvalidOperationException("cannot perform this operation before server identity is verified");
@@ -62,7 +60,7 @@ public abstract class ClientBase : IDisposable
         }
         var cresp = cresult.Data.ToObject<ChallengeSuccessResponse>();
 
-        var serverKey = RSAKeys.FromPublicKey(Convert.FromBase64String(cresp!.PublicKey.KeyData));
+        var serverKey = RSAKeys.FromMessage(cresp!.PublicKey);
         if (!serverKey.Verify(randomData, Convert.FromBase64String(cresp.Response)))
         {
             m_logger.Error("server key verification failed");

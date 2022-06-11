@@ -62,7 +62,10 @@ public class WSBinaryConnection : WSConnection, IDisposable
                 }
             }
 
-            return m_buffer.ToArray();
+            if (!m_disposed && m_socket.State == WebSocketState.Open)
+                return m_buffer.ToArray();
+            else
+                return null;
         }
         finally
         {

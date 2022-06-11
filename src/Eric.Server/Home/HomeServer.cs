@@ -29,7 +29,7 @@ public class HomeServer : IServerWSEndpoint
             PublicKey = PublicKey.FromRSAKeys(Keys),
             Name = "Test Server",
             Description = "A server for testing",
-            URL = "wss://tinycart.local"
+            URL = "ws://localhost:5000"
         };
         PublishedURL = Identity.URL;
     }

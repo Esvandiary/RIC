@@ -42,23 +42,51 @@ public class ChatServerClient
         }
     }
 
-    private Task<JSONCommunicator.Response> HandleConnectRequest(JSONCommunicator comm, string request, JObject data)
+    private async Task<JSONCommunicator.Response> HandleConnectRequest(JSONCommunicator comm, string request, JObject data)
     {
         if (m_user != null)
         {
-            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "already_connected", Data = new JObject() });
+            return new() { Status = "already_connected", Data = new JObject() };
         }
 
         try
         {
             var rdata = data.ToObject<ConnectRequest>()!;
 
-            // TODO: check format
-            var keys = RSAKeys.FromPublicKey(Convert.FromBase64String(rdata.User.PublicKey.KeyData));
+            var keys = RSAKeys.FromMessage(rdata.User.PublicKey);
             if (!keys.Verify(m_server.Keys.PublicKey, Convert.FromBase64String(rdata.Challenge)))
             {
-                return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_challenge", Data = new JObject() });
+                return new() { Status = "invalid_challenge", Data = new JObject() };
             }
+
+            var homeKeys = RSAKeys.FromMessage(rdata.User.HomeServerPublicKey);
+            // verify home server URL validity if provided
+            if (!String.IsNullOrEmpty(rdata.User.HomeServerURL))
+            {
+                m_logger.Debug("verifying home server {0}", rdata.User.HomeServerURL);
+                using (var verifier = await VerifierClient.ConnectAsync(m_server.Services, rdata.User.HomeServerURL, "ric0_home"))
+                {
+                    await verifier.VerifyServerIdentity();
+                    bool keysOK = verifier.Verify(homeKeys);
+                    await verifier.CloseAsync("closing normally");
+                    if (!keysOK)
+                    {
+                        m_logger.Error("connected to home server {0} but keys do not match", rdata.User.HomeServerURL);
+                        return new() { Status = "invalid_home_server", Data = new JObject() };
+                    }
+                }
+                m_logger.Debug("verified home server {0}", rdata.User.HomeServerURL);
+            }
+            // verify home server agrees with username
+            bool homeUserOK = homeKeys.Verify(
+                rdata.User.HomeServerUser.ToUTF8Bytes(),
+                Convert.FromBase64String(rdata!.User.HomeServerUserSignature));
+            if (!homeUserOK)
+            {
+                m_logger.Error("home server username signature does not verify");
+                return new() { Status = "invalid_home_server", Data = new JObject() };
+            }
+            m_logger.Debug("verified home server username {0}", rdata.User.HomeServerUser);
 
             // TODO: m_server.ConnectUser(rdata.User);
 
@@ -69,12 +97,12 @@ public class ChatServerClient
 
             m_user = rdata.User;
 
-            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "success", Data = JObject.FromObject(response) });
+            return new() { Status = "success", Data = JObject.FromObject(response) };
         }
         catch (JsonException)
         {
             // bug?
-            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "invalid_message", Data = new JObject() });
+            return new() { Status = "invalid_message", Data = new JObject() };
         }
         catch (CredentialsException ex)
         {
@@ -85,16 +113,16 @@ public class ChatServerClient
                 _ => "unknown_error"
             };
             // TODO: write info struct
-            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
+            return new() { Status = status, Data = new JObject() };
         }
         catch (JoinPolicyException)
         {
             string status = !String.IsNullOrEmpty(data.Value<string>("join_token")) ? "invalid_join_token" : "join_token_required";
-            return Task.FromResult<JSONCommunicator.Response>(new() { Status = status, Data = new JObject() });
+            return new() { Status = status, Data = new JObject() };
         }
         catch (Exception)
         {
-            return Task.FromResult<JSONCommunicator.Response>(new() { Status = "unknown_error", Data = new JObject() });
+            return new() { Status = "unknown_error", Data = new JObject() };
         }
     }
 

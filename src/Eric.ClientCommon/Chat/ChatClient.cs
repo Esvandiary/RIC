@@ -15,7 +15,7 @@ public class ChatClient : ClientBase
     public static Task<ChatClient> ConnectAsync(CoreServices services, Uri uri) => ConnectAsync(services, uri, CancellationToken.None);
     public static async Task<ChatClient> ConnectAsync(CoreServices services, Uri uri, CancellationToken token)
     {
-        var logger = services.Logging.GetLogger($"ChatClient[{uri}]");
+        var logger = services.Logging.GetLogger("ChatClient");
         var chatUri = new Uri(uri, "ric0_chat");
         var comm = await ClientBase.ConnectAsync(chatUri, logger, token);
         return new ChatClient(services.ClientInfo, comm, logger);

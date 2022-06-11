@@ -15,9 +15,9 @@ public class HomeClient : ClientBase
     public static Task<HomeClient> ConnectAsync(CoreServices services, Uri uri) => ConnectAsync(services, uri, CancellationToken.None);
     public static async Task<HomeClient> ConnectAsync(CoreServices services, Uri uri, CancellationToken token)
     {
-        var logger = services.Logging.GetLogger($"ChatClient[{uri}]");
-        var chatUri = new Uri(uri, "ric0_home");
-        var comm = await ClientBase.ConnectAsync(chatUri, logger, token);
+        var logger = services.Logging.GetLogger("HomeClient");
+        var homeUri = new Uri(uri, "ric0_home");
+        var comm = await ClientBase.ConnectAsync(homeUri, logger, token);
         return new HomeClient(services.ClientInfo, comm, logger);
     }
 
