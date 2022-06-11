@@ -7,7 +7,7 @@ public class WSJSONConnection : WSTextConnection, IJSONConnection, IDisposable
     public WSJSONConnection(WebSocket socket, string remote, Logger logger, bool isClient)
         : base(socket, remote, logger, isClient)
     {
-        ReceivedTextHandler = AttemptDispatchAsync;
+        ReceivedTextHandler = OnTextReceived;
     }
 
     public IJSONConnection.JSONReceivedAction? ReceivedJSONHandler { get; set; }
@@ -16,7 +16,7 @@ public class WSJSONConnection : WSTextConnection, IJSONConnection, IDisposable
 
     public async Task SendJSONAsync(JObject obj) => await SendTextAsync(obj.ToString(Formatting.None));
 
-    public async Task<bool> AttemptDispatchAsync(string message)
+    public async Task<bool> OnTextReceived(string message)
     {
         try
         {
@@ -27,9 +27,13 @@ public class WSJSONConnection : WSTextConnection, IJSONConnection, IDisposable
             await (ReceivedJSONHandler?.Invoke(o) ?? Task.CompletedTask);
             return true;
         }
+        catch (JsonReaderException ex)
+        {
+            m_logger.Warning("Error deserializing JSON message: {0}", ex.Message);
+        }
         catch (Exception ex)
         {
-            m_logger.Error("EXCEPTION in AttemptDispatch: {0}", ex.Message);
+            m_logger.Error("EXCEPTION in OnTextReceived: {0}", ex.Message);
             m_logger.Error("received data: {0}", message);
             m_logger.Error("stack trace: {0}", ex.StackTrace ?? "(none)");
         }

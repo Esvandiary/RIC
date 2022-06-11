@@ -144,6 +144,7 @@ public class JSONCommunicator
     public void ClearRequestHandler(string request) => m_requestHandlers.TryRemove(request, out var _);
 
     public void Dispose() => Dispose(true);
+    ~JSONCommunicator() => Dispose(false);
     protected void Dispose(bool disposing)
     {
         if (!m_disposed)
@@ -157,6 +158,8 @@ public class JSONCommunicator
             m_requestHandlers.Clear();
             m_requests.Clear();
             m_conn.Dispose();
+
+            GC.SuppressFinalize(this);
         }
         m_disposed = true;
     }

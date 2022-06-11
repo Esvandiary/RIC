@@ -8,7 +8,7 @@ public class WSBSONConnection : WSBinaryConnection, IJSONConnection, IDisposable
     public WSBSONConnection(WebSocket socket, string remote, Logger logger, bool isClient)
         : base(socket, remote, logger, isClient)
     {
-        ReceivedBytesHandler = AttemptDispatchAsync;
+        ReceivedBytesHandler = OnBytesReceived;
     }
 
     public IJSONConnection.JSONReceivedAction? ReceivedJSONHandler { get; set; }
@@ -27,7 +27,7 @@ public class WSBSONConnection : WSBinaryConnection, IJSONConnection, IDisposable
         }
     }
 
-    public async Task<bool> AttemptDispatchAsync(byte[] message)
+    public async Task<bool> OnBytesReceived(byte[] message)
     {
         try
         {
@@ -42,9 +42,13 @@ public class WSBSONConnection : WSBinaryConnection, IJSONConnection, IDisposable
                 return true;
             }
         }
+        catch (JsonReaderException ex)
+        {
+            m_logger.Warning("Error deserializing BSON message: {0}", ex.Message);
+        }
         catch (Exception ex)
         {
-            m_logger.Error("EXCEPTION in AttemptDispatch: {0}", ex.Message);
+            m_logger.Error("EXCEPTION in OnBytesReceived: {0}", ex.Message);
             m_logger.Error("received data of length {0}", message.Length);
             m_logger.Error("stack trace: {0}", ex.StackTrace ?? "(none)");
         }
